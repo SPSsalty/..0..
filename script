@@ -1,0 +1,142 @@
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+-- Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local isRunning = false
+local isrunning = false
+local AutoCollect = nil
+local AutoDeposit = nil
+
+local autocollect = {
+    function()
+        local args = {
+            [1] = {
+                ["Stone"] = 2,
+                ["Granite"] = 1,
+                ["CoarseDirt"] = 2,
+                ["DiamondOre"] = 1,
+                ["Ice"] = 1
+            }
+        }
+
+        game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("remo"):WaitForChild("src"):WaitForChild("container"):WaitForChild("collect.drops"):FireServer(unpack(args))
+
+    end
+}
+
+local autodeposit = {
+    function()
+        local args = {
+            [1] = 0
+        }
+        
+        game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("remo"):WaitForChild("src"):WaitForChild("container"):WaitForChild("processor.process"):InvokeServer(unpack(args))
+        
+    end
+}
+
+-- Function to run all scripts
+local function runAutocollectScripts()
+    for i, scriptFunc in ipairs(autocollect) do
+        pcall(function()
+            scriptFunc()
+        end)
+    end
+end
+
+-- Function to run all scripts
+local function runAutodepositScripts()
+    for i, scriptFunc in ipairs(autodeposit) do
+        pcall(function()
+            scriptFunc()
+        end)
+    end
+end
+
+-- Create window
+local Window = Library:CreateWindow({
+    Title = 'Auralis | Premium Version',
+    Center = true, 
+    AutoShow = true,
+})
+
+-- Create Tabs
+local Tabs = {
+    Main = Window:AddTab('Main'), 
+}
+
+-- Main Tab
+local MainLeftBox = Tabs.Main:AddLeftGroupbox('Main')
+-- New group box for hitbox expander
+
+MainLeftBox:AddToggle("AutoCollect", {
+    Text = "Auto Collect",
+    Default = false,
+    Tooltip = "Toggle auto collect.",
+    Callback = function(value)
+        isRunning = value
+        
+        if isRunning then
+            -- Start the loop when toggle is enabled
+            if AutoCollect then
+                AutoCollect:Disconnect()
+            end
+            
+            FastReload = game:GetService("RunService").Heartbeat:Connect(function()
+                runAutocollectScripts()
+                wait(0) -- Changed delay to 0.2 seconds between iterations
+            end)
+            
+            print("Auto Collect Started")
+        else
+            -- Stop the loop when toggle is disabled
+            if AutoCollect then
+                AutoCollect:Disconnect()
+                AutoCollect = nil
+            end
+            
+            print("Auto Collect Stopped")
+        end
+    end
+})
+
+MainLeftBox:AddToggle("AutoDeposit", {
+    Text = "Auto Deposit",
+    Default = false,
+    Tooltip = "Toggle auto deposit.",
+    Callback = function(value)
+        isRunning = value
+        
+        if isrunning then
+            -- Start the loop when toggle is enabled
+            if AutoDeposit then
+                AutoDeposit:Disconnect()
+            end
+            
+            FastReload = game:GetService("RunService").Heartbeat:Connect(function()
+                runAutodepositScripts()
+                wait(0) -- Changed delay to 0.2 seconds between iterations
+            end)
+            
+            print("Auto Deposit Started")
+        else
+            -- Stop the loop when toggle is disabled
+            if AutoDeposit then
+                AutoDeposit:Disconnect()
+                AutoDeposit = nil
+            end
+            
+            print("Auto Deposit Stopped")
+        end
+    end
+})
