@@ -82,7 +82,7 @@ end
 
 -- UI Window
 local Window = Library:CreateWindow({
-    Title = 'Auralis | Premium Version',
+    Title = 'Auralis | Free Version',
     Center = true,
     AutoShow = true,
 })
