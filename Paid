@@ -161,8 +161,8 @@ MainLeftBox:AddToggle("AutoDeposit", {
 })
 
 -- Auto Daily Toggle
-MainLeftBox:AddToggle("AutoDaily", {
-    Text = "Auto Daily",
+MainLeftBox:AddToggle("AutoGifts", {
+    Text = "Auto Gifts",
     Default = false,
     Tooltip = "Toggle auto daily claim (0 to 12).",
     Callback = function(value)
