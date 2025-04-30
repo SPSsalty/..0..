@@ -30,7 +30,7 @@ local autoDepositDelay = 0.1
 local function infiniteMoney()
     local args = {
         [1] = {
-            ["Crimtane"] = 999,
+            ["CrimtaneOre"] = 999,
         }
     }
 
@@ -575,7 +575,7 @@ ExtraLeftBox:AddToggle("CtrlClickTP", {
     end
 })
 
-ExtraRightBox:AddLabel("RNG Dropper Tycoon")
+ExtraRightBox:AddLabel("RNG Dropper Tycoon V1.0")
 
 -- Add Discord Invite Button
 ExtraRightBox:AddButton("Copy Discord Invite Link", function()
