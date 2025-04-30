@@ -43,7 +43,7 @@ end
 
 local function infiniteDiamonds()
     local args = {
-        [1] = 99
+        [1] = 999
     }
 
     ReplicatedStorage:WaitForChild("rbxts_include")
