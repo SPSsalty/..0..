@@ -54,8 +54,8 @@ local function autoDeposit()
         :InvokeServer(unpack(args))
 end
 
--- Auto Daily logic (Claims every daily reward from 0 to 12)
-local function autoDaily()
+-- Auto Gifts logic (Claims every Gift reward from 0 to 12)
+local function autoGifts()
     for i = 0, 12 do
         local args = { [1] = tostring(i) }
 
@@ -69,7 +69,7 @@ local function autoDaily()
             :WaitForChild("playtime.claim")
             :InvokeServer(unpack(args))
 
-        print("Claimed daily reward: " .. i)
+        print("Claimed Gifts reward: " .. i)
         wait(1)  -- wait for 1 second before claiming next reward
     end
 end
@@ -160,31 +160,31 @@ MainLeftBox:AddToggle("AutoDeposit", {
     end
 })
 
--- Auto Daily Toggle
+-- Auto Gifts Toggle
 MainLeftBox:AddToggle("AutoGifts", {
     Text = "Auto Gifts",
     Default = false,
-    Tooltip = "Toggle auto daily claim (0 to 12).",
+    Tooltip = "Toggle auto Gifts claim (0 to 12).",
     Callback = function(value)
         if value then
-            -- Start the Auto Daily task
-            if AutoDailyConnection then
-                AutoDailyConnection:Disconnect()
+            -- Start the Auto Gifts task
+            if AutoGiftsConnection then
+                AutoGiftsConnection:Disconnect()
             end
 
-            AutoDailyConnection = RunService.Heartbeat:Connect(function()
-                pcall(autoDaily)
+            AutoGiftsConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoGifts)
             end)
 
-            print("Auto Daily Started")
+            print("Auto Gifts Started")
         else
-            -- Stop the Auto Daily task
-            if AutoDailyConnection then
-                AutoDailyConnection:Disconnect()
-                AutoDailyConnection = nil
+            -- Stop the Auto Gifts task
+            if AutoGiftsConnection then
+                AutoGiftsConnection:Disconnect()
+                AutoGiftsConnection = nil
             end
 
-            print("Auto Daily Stopped")
+            print("Auto Gifts Stopped")
         end
     end
 })
