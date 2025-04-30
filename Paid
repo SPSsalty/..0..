@@ -287,7 +287,7 @@ MainInfiniteLeftBox:AddToggle("InfiniteMoney", {
 MainInfiniteLeftBox:AddSlider("InfiniteMoneyDelay", {
     Text = "Infinite Money Delay",  
     Min = 0.1,  -- Minimum delay (in seconds)
-    Max = 3,    -- Maximum delay (in seconds)
+    Max = 5,    -- Maximum delay (in seconds)
     Default = 0.1,  -- Default delay value
     Rounding = 1,    -- Round to 1 decimal place
     Callback = function(value)
@@ -328,7 +328,7 @@ MainInfiniteLeftBox:AddToggle("InfiniteDiamonds", {
 MainInfiniteLeftBox:AddSlider("InfiniteDiamondsDelay", {
     Text = "Infinite Diamonds Delay",  
     Min = 0.1,  
-    Max = 3,    
+    Max = 5,    
     Default = 0.1,  
     Rounding = 1,    
     Callback = function(value)
@@ -369,7 +369,7 @@ MainAutoRightBox:AddToggle("AutoDeposit", {
 MainAutoRightBox:AddSlider("AutoDepositDelay", {
     Text = "Auto Deposit Delay",  
     Min = 0.1,  
-    Max = 3,    
+    Max = 5,    
     Default = 0.1,  
     Rounding = 1,    
     Callback = function(value)
