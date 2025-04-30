@@ -147,21 +147,15 @@ local Tabs = {
     Main = Window:AddTab('Main'),
     Overworld = Window:AddTab('Overworld'),
     Nether = Window:AddTab('Nether'),
-    Info = Window:AddTab('Info')
+    Extra = Window:AddTab('Extra')
 }
 
 local MainInfiniteLeftBox = Tabs.Main:AddLeftGroupbox('Infinite')
 local MainAutoRightBox = Tabs.Main:AddRightGroupbox('Auto')
 local OverworldHatchRightBox = Tabs.Overworld:AddRightGroupbox('Hatch')
 local NetherHatchRightBox = Tabs.Nether:AddRightGroupbox('Hatch')
-local InfoLeftBox = Tabs.Info:AddLeftGroupbox('Info')
-
-InfoLeftBox:AddLabel("RNG Dropper Tycoon")
-
--- Add Discord Invite Button
-InfoLeftBox:AddButton("Copy Discord Invite Link", function()
-    showDiscordInvite()  -- Display the Discord invite link in the output console for users to copy
-end)
+local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Extra')
+local ExtraRightBox = Tabs.Extra:AddRightGroupbox('Info')
 
 -- Infinite Money Toggle (under Infinite section)
 MainInfiniteLeftBox:AddToggle("InfiniteMoney", {
@@ -384,3 +378,10 @@ NetherHatchRightBox:AddToggle("AutoEggPurchase", {
         end
     end
 })
+
+ExtraRightBox:AddLabel("RNG Dropper Tycoon")
+
+-- Add Discord Invite Button
+ExtraRightBox:AddButton("Copy Discord Invite Link", function()
+    showDiscordInvite()  -- Display the Discord invite link in the output console for users to copy
+end)
