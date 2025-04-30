@@ -197,6 +197,24 @@ local function purchaseEgg(eggType)
     end
 end
 
+-- Auto Upgrade Launcher logic
+local function autoUpgradeLauncher()
+    local args = {
+        [1] = 0
+    }
+
+    -- Trigger the upgrade via the server
+    game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include")
+        :WaitForChild("node_modules")
+        :WaitForChild("@rbxts")
+        :WaitForChild("remo")
+        :WaitForChild("src")
+        :WaitForChild("container")
+        :WaitForChild("processor.upgrade")
+        :InvokeServer(unpack(args))
+end
+
+
 -- UI Window
 local Window = Library:CreateWindow({
     Title = 'Auralis | Paid Version',
@@ -301,6 +319,34 @@ MainAutoRightBox:AddToggle("AutoDeposit", {
             end
 
             print("Auto Deposit Stopped")
+        end
+    end
+})
+
+MainAutoRightBox:AddToggle("AutoUpgradeLauncher", {
+    Text = "Auto Upgrade Launcher",
+    Default = false,
+    Tooltip = "Toggle auto upgrade launcher.",
+    Callback = function(value)
+        if value then
+            -- Start the Auto Upgrade task
+            if AutoUpgradeConnection then
+                AutoUpgradeConnection:Disconnect()
+            end
+
+            AutoUpgradeConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoUpgradeLauncher)  -- Automatically trigger the upgrade
+            end)
+
+            print("Auto Upgrade Launcher Enabled")
+        else
+            -- Stop the Auto Upgrade task
+            if AutoUpgradeConnection then
+                AutoUpgradeConnection:Disconnect()
+                AutoUpgradeConnection = nil
+            end
+
+            print("Auto Upgrade Launcher Disabled")
         end
     end
 })
