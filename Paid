@@ -1,1 +1,190 @@
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
 
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- State variables
+local isInfiniteMoneyActive = false
+local isDepositing = false
+local InfiniteMoneyConnection = nil
+local AutoDepositConnection = nil
+local AutoDailyConnection = nil
+
+-- Infinite Money logic
+local function infiniteMoney()
+    local args = {
+        [1] = {
+            ["Stone"] = 2,
+            ["Granite"] = 1,
+            ["CoarseDirt"] = 2,
+            ["DiamondOre"] = 1,
+            ["Ice"] = 1
+        }
+    }
+
+    ReplicatedStorage:WaitForChild("rbxts_include")
+        :WaitForChild("node_modules")
+        :WaitForChild("@rbxts")
+        :WaitForChild("remo")
+        :WaitForChild("src")
+        :WaitForChild("container")
+        :WaitForChild("collect.drops")
+        :FireServer(unpack(args))
+end
+
+-- Auto deposit logic
+local function autoDeposit()
+    local args = { [1] = 0 }
+
+    ReplicatedStorage:WaitForChild("rbxts_include")
+        :WaitForChild("node_modules")
+        :WaitForChild("@rbxts")
+        :WaitForChild("remo")
+        :WaitForChild("src")
+        :WaitForChild("container")
+        :WaitForChild("processor.process")
+        :InvokeServer(unpack(args))
+end
+
+-- Auto Daily logic (Claims every daily reward from 0 to 12)
+local function autoDaily()
+    for i = 0, 12 do
+        local args = { [1] = tostring(i) }
+
+        -- Call the server function to claim daily rewards
+        ReplicatedStorage:WaitForChild("rbxts_include")
+            :WaitForChild("node_modules")
+            :WaitForChild("@rbxts")
+            :WaitForChild("remo")
+            :WaitForChild("src")
+            :WaitForChild("container")
+            :WaitForChild("playtime.claim")
+            :InvokeServer(unpack(args))
+
+        print("Claimed daily reward: " .. i)
+        wait(1)  -- wait for 1 second before claiming next reward
+    end
+end
+
+-- Show Discord Invite link as text
+local function showDiscordInvite()
+    local discordInviteLink = "https://discord.gg/jcmp39jGDs"
+    print("Join our Discord: " .. discordInviteLink)  -- Display the link in the output console
+end
+
+-- UI Window
+local Window = Library:CreateWindow({
+    Title = 'Auralis | Free Version',
+    Center = true,
+    AutoShow = true,
+})
+
+local Tabs = {
+    Main = Window:AddTab('Main'),
+    Info = Window:AddTab('Info')
+}
+
+local MainLeftBox = Tabs.Main:AddLeftGroupbox('Main')
+local InfoLeftBox = Tabs.Info:AddLeftGroupbox('Info')
+
+InfoLeftBox:AddLabel("RNG Dropper Tycoon")
+
+-- Add Discord Invite Button
+InfoLeftBox:AddButton("Copy Discord Invite Link", function()
+    showDiscordInvite()  -- Display the Discord invite link in the output console for users to copy
+end)
+
+-- Infinite Money Toggle
+MainLeftBox:AddToggle("InfiniteMoney", {
+    Text = "Infinite Money",
+    Default = false,
+    Tooltip = "Toggle infinite money.",
+    Callback = function(value)
+        isInfiniteMoneyActive = value
+
+        if isInfiniteMoneyActive then
+            if InfiniteMoneyConnection then
+                InfiniteMoneyConnection:Disconnect()
+            end
+
+            InfiniteMoneyConnection = RunService.Heartbeat:Connect(function()
+                pcall(infiniteMoney)
+            end)
+
+            print("Infinite Money Enabled")
+        else
+            if InfiniteMoneyConnection then
+                InfiniteMoneyConnection:Disconnect()
+                InfiniteMoneyConnection = nil
+            end
+
+            print("Infinite Money Disabled")
+        end
+    end
+})
+
+-- Auto Deposit Toggle
+MainLeftBox:AddToggle("AutoDeposit", {
+    Text = "Auto Deposit",
+    Default = false,
+    Tooltip = "Toggle auto deposit.",
+    Callback = function(value)
+        isDepositing = value
+
+        if isDepositing then
+            if AutoDepositConnection then
+                AutoDepositConnection:Disconnect()
+            end
+
+            AutoDepositConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoDeposit)
+            end)
+
+            print("Auto Deposit Started")
+        else
+            if AutoDepositConnection then
+                AutoDepositConnection:Disconnect()
+                AutoDepositConnection = nil
+            end
+
+            print("Auto Deposit Stopped")
+        end
+    end
+})
+
+-- Auto Daily Toggle
+MainLeftBox:AddToggle("AutoDaily", {
+    Text = "Auto Daily",
+    Default = false,
+    Tooltip = "Toggle auto daily claim (0 to 12).",
+    Callback = function(value)
+        if value then
+            -- Start the Auto Daily task
+            if AutoDailyConnection then
+                AutoDailyConnection:Disconnect()
+            end
+
+            AutoDailyConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoDaily)
+            end)
+
+            print("Auto Daily Started")
+        else
+            -- Stop the Auto Daily task
+            if AutoDailyConnection then
+                AutoDailyConnection:Disconnect()
+                AutoDailyConnection = nil
+            end
+
+            print("Auto Daily Stopped")
+        end
+    end
+})
