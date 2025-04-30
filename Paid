@@ -30,7 +30,7 @@ local autoDepositDelay = 0.1
 local function infiniteMoney()
     local args = {
         [1] = {
-            ["Sandstone"] = 999,
+            ["Crimtane"] = 999,
         }
     }
 
