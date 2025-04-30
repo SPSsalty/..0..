@@ -23,7 +23,10 @@ local AutoDepositConnection = nil
 local AutoGiftsConnection = nil
 local EggPurchaseConnection = nil
 
--- Infinite Money logic
+local infiniteMoneyDelay = 0.1
+local infiniteDiamondsDelay = 0.1
+local autoDepositDelay = 0.1
+
 local function infiniteMoney()
     local args = {
         [1] = {
@@ -31,14 +34,20 @@ local function infiniteMoney()
         }
     }
 
-    ReplicatedStorage:WaitForChild("rbxts_include")
-        :WaitForChild("node_modules")
-        :WaitForChild("@rbxts")
-        :WaitForChild("remo")
-        :WaitForChild("src")
-        :WaitForChild("container")
-        :WaitForChild("collect.drops")
-        :FireServer(unpack(args))
+    while isInfiniteMoneyActive do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("rbxts_include")
+                :WaitForChild("node_modules")
+                :WaitForChild("@rbxts")
+                :WaitForChild("remo")
+                :WaitForChild("src")
+                :WaitForChild("container")
+                :WaitForChild("collect.drops")
+                :FireServer(unpack(args))
+        end)
+
+        wait(infiniteMoneyDelay)  -- Wait for the user-defined delay time
+    end
 end
 
 local function infiniteDiamonds()
@@ -46,28 +55,39 @@ local function infiniteDiamonds()
         [1] = 999
     }
 
-    ReplicatedStorage:WaitForChild("rbxts_include")
-        :WaitForChild("node_modules")
-        :WaitForChild("@rbxts")
-        :WaitForChild("remo")
-        :WaitForChild("src")
-        :WaitForChild("container")
-        :WaitForChild("collect.diamonds")
-        :FireServer(unpack(args))
+    while isInfiniteDiamondsActive do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("rbxts_include")
+                :WaitForChild("node_modules")
+                :WaitForChild("@rbxts")
+                :WaitForChild("remo")
+                :WaitForChild("src")
+                :WaitForChild("container")
+                :WaitForChild("collect.diamonds")
+                :FireServer(unpack(args))
+        end)
+
+        wait(infiniteDiamondsDelay)  -- Wait for the user-defined delay time
+    end
 end
 
--- Auto deposit logic
 local function autoDeposit()
     local args = { [1] = 0 }
 
-    ReplicatedStorage:WaitForChild("rbxts_include")
-        :WaitForChild("node_modules")
-        :WaitForChild("@rbxts")
-        :WaitForChild("remo")
-        :WaitForChild("src")
-        :WaitForChild("container")
-        :WaitForChild("processor.process")
-        :InvokeServer(unpack(args))
+    while isDepositing do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("rbxts_include")
+                :WaitForChild("node_modules")
+                :WaitForChild("@rbxts")
+                :WaitForChild("remo")
+                :WaitForChild("src")
+                :WaitForChild("container")
+                :WaitForChild("processor.process")
+                :InvokeServer(unpack(args))
+        end)
+
+        wait(autoDepositDelay)  -- Wait for the user-defined delay time
+    end
 end
 
 -- Auto Gifts logic (Claims every Gift reward from 0 to 12)
@@ -214,7 +234,6 @@ local function autoUpgradeLauncher()
         :InvokeServer(unpack(args))
 end
 
-
 -- UI Window
 local Window = Library:CreateWindow({
     Title = 'Auralis | Paid Version',
@@ -265,6 +284,18 @@ MainInfiniteLeftBox:AddToggle("InfiniteMoney", {
     end
 })
 
+MainInfiniteLeftBox:AddSlider("InfiniteMoneyDelay", {
+    Text = "Infinite Money Delay",  
+    Min = 0.1,  -- Minimum delay (in seconds)
+    Max = 3,    -- Maximum delay (in seconds)
+    Default = 0.1,  -- Default delay value
+    Rounding = 1,    -- Round to 1 decimal place
+    Callback = function(value)
+        infiniteMoneyDelay = value  -- Update the delay for infinite money
+        print("Infinite Money Delay set to: " .. value .. " seconds")
+    end
+})
+
 -- Infinite Diamonds Toggle (under Infinite section)
 MainInfiniteLeftBox:AddToggle("InfiniteDiamonds", {
     Text = "Infinite Diamonds",
@@ -294,6 +325,18 @@ MainInfiniteLeftBox:AddToggle("InfiniteDiamonds", {
     end
 })
 
+MainInfiniteLeftBox:AddSlider("InfiniteDiamondsDelay", {
+    Text = "Infinite Diamonds Delay",  
+    Min = 0.1,  
+    Max = 3,    
+    Default = 0.1,  
+    Rounding = 1,    
+    Callback = function(value)
+        infiniteDiamondsDelay = value  -- Update the delay for infinite diamonds
+        print("Infinite Diamonds Delay set to: " .. value .. " seconds")
+    end
+})
+
 -- Auto Deposit Toggle (under Auto section)
 MainAutoRightBox:AddToggle("AutoDeposit", {
     Text = "Auto Deposit",
@@ -320,6 +363,18 @@ MainAutoRightBox:AddToggle("AutoDeposit", {
 
             print("Auto Deposit Stopped")
         end
+    end
+})
+
+MainAutoRightBox:AddSlider("AutoDepositDelay", {
+    Text = "Auto Deposit Delay",  
+    Min = 0.1,  
+    Max = 3,    
+    Default = 0.1,  
+    Rounding = 1,    
+    Callback = function(value)
+        autoDepositDelay = value  -- Update the delay for auto deposit
+        print("Auto Deposit Delay set to: " .. value .. " seconds")
     end
 })
 
