@@ -40,6 +40,21 @@ local function infiniteMoney()
         :FireServer(unpack(args))
 end
 
+local function infiniteDiamonds()
+    local args = {
+        [1] = 99
+    }
+
+    ReplicatedStorage:WaitForChild("rbxts_include")
+        :WaitForChild("node_modules")
+        :WaitForChild("@rbxts")
+        :WaitForChild("remo")
+        :WaitForChild("src")
+        :WaitForChild("container")
+        :WaitForChild("collect.diamonds")
+        :FireServer(unpack(args))
+end
+
 -- Auto deposit logic
 local function autoDeposit()
     local args = { [1] = 0 }
@@ -127,6 +142,34 @@ MainLeftBox:AddToggle("InfiniteMoney", {
             end
 
             print("Infinite Money Disabled")
+        end
+    end
+})
+
+MainLeftBox:AddToggle("InfiniteDiamonds", {
+    Text = "Infinite Diamonds",
+    Default = false,
+    Tooltip = "Toggle infinite diamonds.",
+    Callback = function(value)
+        isInfiniteDiamondsActive = value
+
+        if isInfiniteDiamondsActive then
+            if InfiniteDiamondsConnection then
+                InfiniteDiamondsConnection:Disconnect()
+            end
+
+            InfiniteDiamondsConnection = RunService.Heartbeat:Connect(function()
+                pcall(infiniteDiamonds)
+            end)
+
+            print("Infinite Diamonds Enabled")
+        else
+            if InfiniteDiamondsConnection then
+                InfiniteDiamondsConnection:Disconnect()
+                InfiniteDiamondsConnection = nil
+            end
+
+            print("Infinite Diamonds Disabled")
         end
     end
 })
