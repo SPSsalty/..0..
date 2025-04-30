@@ -31,7 +31,7 @@ local function infiniteMoney()
             ["Granite"] = 1,
             ["CoarseDirt"] = 1,
             ["DiamondOre"] = 999,
-            ["Ice"] = 1
+            ["Ice"] = 9999
         }
     }
 
@@ -145,12 +145,15 @@ local Window = Library:CreateWindow({
 
 local Tabs = {
     Main = Window:AddTab('Main'),
+    Overworld = Window:AddTab('Overworld'),
+    Nether = Window:AddTab('Nether'),
     Info = Window:AddTab('Info')
 }
 
-local InfiniteLeftBox = Tabs.Main:AddLeftGroupbox('Infinite')
-local AutoRightBox = Tabs.Main:AddRightGroupbox('Auto')
-local HatchRightBox = Tabs.Main:AddRightGroupbox('Hatch')
+local MainInfiniteLeftBox = Tabs.Main:AddLeftGroupbox('Infinite')
+local MainAutoRightBox = Tabs.Main:AddRightGroupbox('Auto')
+local OverworldHatchRightBox = Tabs.Overworld:AddRightGroupbox('Hatch')
+local NetherHatchRightBox = Tabs.Nether:AddRightGroupbox('Hatch')
 local InfoLeftBox = Tabs.Info:AddLeftGroupbox('Info')
 
 InfoLeftBox:AddLabel("RNG Dropper Tycoon")
@@ -161,7 +164,7 @@ InfoLeftBox:AddButton("Copy Discord Invite Link", function()
 end)
 
 -- Infinite Money Toggle (under Infinite section)
-InfiniteLeftBox:AddToggle("InfiniteMoney", {
+MainInfiniteLeftBox:AddToggle("InfiniteMoney", {
     Text = "Infinite Money",
     Default = false,
     Tooltip = "Toggle infinite money.",
@@ -190,7 +193,7 @@ InfiniteLeftBox:AddToggle("InfiniteMoney", {
 })
 
 -- Infinite Diamonds Toggle (under Infinite section)
-InfiniteLeftBox:AddToggle("InfiniteDiamonds", {
+MainInfiniteLeftBox:AddToggle("InfiniteDiamonds", {
     Text = "Infinite Diamonds",
     Default = false,
     Tooltip = "Toggle infinite diamonds.",
@@ -219,7 +222,7 @@ InfiniteLeftBox:AddToggle("InfiniteDiamonds", {
 })
 
 -- Auto Deposit Toggle (under Auto section)
-AutoRightBox:AddToggle("AutoDeposit", {
+MainAutoRightBox:AddToggle("AutoDeposit", {
     Text = "Auto Deposit",
     Default = false,
     Tooltip = "Toggle auto deposit.",
@@ -248,7 +251,7 @@ AutoRightBox:AddToggle("AutoDeposit", {
 })
 
 -- Auto Daily Toggle (under Auto section)
-AutoRightBox:AddToggle("AutoGifts", {
+MainAutoRightBox:AddToggle("AutoGifts", {
     Text = "Auto Gifts",
     Default = false,
     Tooltip = "Toggle auto gifts claim (0 to 12).",
@@ -276,7 +279,7 @@ AutoRightBox:AddToggle("AutoGifts", {
     end
 })
 
-AutoRightBox:AddToggle("AutoRebirth", {
+MainAutoRightBox:AddToggle("AutoRebirth", {
     Text = "Auto Rebirth",
     Default = false,
     Tooltip = "Toggle auto rebirth.",
@@ -305,7 +308,7 @@ AutoRightBox:AddToggle("AutoRebirth", {
 })
 
 -- Egg Type Selection Dropdown (under Hatch section)
-HatchRightBox:AddDropdown("EggType", {
+OverworldHatchRightBox:AddDropdown("EggType", {
     Text = "Select Egg Type",
     Values = {"Yeti", "Pumpkin", "Sea", "Nature"},  -- List the available egg types
     Default = "Yeti",  -- Default to "Yeti"
@@ -316,7 +319,45 @@ HatchRightBox:AddDropdown("EggType", {
 })
 
 -- Auto Egg Purchase Toggle (under Auto section)
-HatchRightBox:AddToggle("AutoEggPurchase", {
+OverworldHatchRightBox:AddToggle("AutoEggPurchase", {
+    Text = "Auto Egg Purchase",
+    Default = false,
+    Tooltip = "Automatically purchase selected egg type.",
+    Callback = function(value)
+        isPurchasingEgg = value
+
+        if isPurchasingEgg then
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+            end
+
+            EggPurchaseConnection = RunService.Heartbeat:Connect(function()
+                pcall(purchaseEgg, selectedEggType)  -- Automatically purchase the selected egg type
+            end)
+
+            print("Auto Egg Purchase Enabled")
+        else
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+                EggPurchaseConnection = nil
+            end
+
+            print("Auto Egg Purchase Disabled")
+        end
+    end
+})
+
+NetherHatchRightBox:AddDropdown("EggType", {
+    Text = "Select Egg Type",
+    Values = {"Golem", "Witch", "Dragon", "Magma"},  -- List the available egg types
+    Default = "Golem",  -- Default to "Yeti"
+    Callback = function(option)
+        selectedEggType = option  -- Set the selected egg type
+        print("Selected Egg Type: " .. selectedEggType)
+    end
+})
+
+NetherHatchRightBox:AddToggle("AutoEggPurchase", {
     Text = "Auto Egg Purchase",
     Default = false,
     Tooltip = "Automatically purchase selected egg type.",
