@@ -379,6 +379,117 @@ NetherHatchRightBox:AddToggle("AutoEggPurchase", {
     end
 })
 
+ExtraLeftBox:AddSlider("WalkspeedSlider", {
+    Text = "Walkspeed",  -- Label for the slider
+    Min = 16,  -- Minimum walkspeed (default walkspeed in Roblox)
+    Max = 500,  -- Maximum walkspeed value
+    Default = 16,  -- Default value for walkspeed (16 is the default)
+    Rounding = 1,  -- Round to 1 decimal place
+    Callback = function(value)
+        -- Set the LocalPlayer's walkspeed based on the slider value
+        LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = value
+        print("Walkspeed set to: " .. value)
+    end
+})
+
+ExtraLeftBox:AddSlider("JumpHeight", {
+    Text = "Jump Height",
+    Min = 50,  -- Minimum Jump Height
+    Max = 200, -- Maximum Jump Height
+    Default = 100,
+    Rounding = 1,
+    Callback = function(value)
+        LocalPlayer.Character.Humanoid.JumpHeight = value
+        print("Jump Height set to: " .. value)
+    end
+})
+
+-- Variable to track if Ctrl + Click TP is enabled or not
+local isCtrlClickTPEnabled = false
+local isCtrlPressed = false  -- Track if Ctrl is pressed
+
+-- Store event connections to disconnect later
+local ctrlPressConnection = nil
+local ctrlReleaseConnection = nil
+local mouseClickConnection = nil
+
+-- Function to handle Ctrl + Click teleportation
+local function handleCtrlClickTP()
+    -- Detect Mouse Click
+    mouseClickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if isCtrlPressed and isCtrlClickTPEnabled then  -- Only teleport if Ctrl is pressed and feature is enabled
+                local mouse = LocalPlayer:GetMouse()
+                local clickPosition = mouse.Hit.p  -- Get the position where the mouse clicked
+
+                -- Teleport the player to the click position
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character:SetPrimaryPartCFrame(CFrame.new(clickPosition))
+                    print("Teleported to: " .. tostring(clickPosition))
+                end
+            end
+        end
+    end)
+
+    -- Listen for the Ctrl key press and release
+    ctrlPressConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+                isCtrlPressed = true  -- Set flag when Ctrl is pressed
+            end
+        end
+    end)
+
+    -- Listen for Ctrl key release
+    ctrlReleaseConnection = game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+                isCtrlPressed = false  -- Reset flag when Ctrl is released
+            end
+        end
+    end)
+end
+
+-- Function to disconnect all connections
+local function disconnectCtrlClickTP()
+    if ctrlPressConnection then
+        ctrlPressConnection:Disconnect()
+        ctrlPressConnection = nil
+    end
+    if ctrlReleaseConnection then
+        ctrlReleaseConnection:Disconnect()
+        ctrlReleaseConnection = nil
+    end
+    if mouseClickConnection then
+        mouseClickConnection:Disconnect()
+        mouseClickConnection = nil
+    end
+end
+
+-- Add a Toggle button for Ctrl + Click TP in the UI
+ExtraLeftBox:AddToggle("CtrlClickTP", {
+    Text = "Ctrl + Click TP",
+    Default = false,
+    Tooltip = "Toggle Ctrl + Click to teleport.",
+    Callback = function(value)
+        isCtrlClickTPEnabled = value  -- Update the state of the toggle
+
+        if value then
+            -- Enable Ctrl + Click Teleport
+            handleCtrlClickTP()
+            print("Ctrl + Click TP Enabled")
+        else
+            -- Disable Ctrl + Click Teleport
+            isCtrlPressed = false
+            disconnectCtrlClickTP()  -- Disconnect event listeners to disable the feature
+            print("Ctrl + Click TP Disabled")
+        end
+    end
+})
+
 ExtraRightBox:AddLabel("RNG Dropper Tycoon")
 
 -- Add Discord Invite Button
