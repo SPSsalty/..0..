@@ -13,10 +13,15 @@ local LocalPlayer = Players.LocalPlayer
 
 -- State variables
 local isInfiniteMoneyActive = false
+local isInfiniteDiamondsActive = false
 local isDepositing = false
+local isPurchasingEgg = false
+local selectedEggType = "Yeti"  -- Default egg type to purchase
 local InfiniteMoneyConnection = nil
+local InfiniteDiamondsConnection = nil
 local AutoDepositConnection = nil
-local AutoDailyConnection = nil
+local AutoGiftsConnection = nil
+local EggPurchaseConnection = nil
 
 -- Infinite Money logic
 local function infiniteMoney()
@@ -95,6 +100,31 @@ local function showDiscordInvite()
     print("Join our Discord: " .. discordInviteLink)  -- Display the link in the output console
 end
 
+-- Purchase Egg logic
+local function purchaseEgg(eggType)
+    local args = {
+        [1] = eggType,   -- Egg name
+        [2] = 1          -- Always buy 1 egg of the selected type
+    }
+
+    local success, err = pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include")
+            :WaitForChild("node_modules")
+            :WaitForChild("@rbxts")
+            :WaitForChild("remo")
+            :WaitForChild("src")
+            :WaitForChild("container")
+            :WaitForChild("eggs.purchase")
+            :InvokeServer(unpack(args))
+    end)
+
+    if success then
+        print("Successfully purchased 1 " .. eggType .. " egg!")
+    else
+        print("Error purchasing " .. eggType .. " egg: " .. err)
+    end
+end
+
 -- UI Window
 local Window = Library:CreateWindow({
     Title = 'Auralis | Paid Version',
@@ -107,7 +137,9 @@ local Tabs = {
     Info = Window:AddTab('Info')
 }
 
-local MainLeftBox = Tabs.Main:AddLeftGroupbox('Main')
+local InfiniteLeftBox = Tabs.Main:AddLeftGroupbox('Infinite')
+local AutoRightBox = Tabs.Main:AddRightGroupbox('Auto')
+local HatchRightBox = Tabs.Main:AddRightGroupbox('Hatch')
 local InfoLeftBox = Tabs.Info:AddLeftGroupbox('Info')
 
 InfoLeftBox:AddLabel("RNG Dropper Tycoon")
@@ -117,8 +149,8 @@ InfoLeftBox:AddButton("Copy Discord Invite Link", function()
     showDiscordInvite()  -- Display the Discord invite link in the output console for users to copy
 end)
 
--- Infinite Money Toggle
-MainLeftBox:AddToggle("InfiniteMoney", {
+-- Infinite Money Toggle (under Infinite section)
+InfiniteLeftBox:AddToggle("InfiniteMoney", {
     Text = "Infinite Money",
     Default = false,
     Tooltip = "Toggle infinite money.",
@@ -146,7 +178,8 @@ MainLeftBox:AddToggle("InfiniteMoney", {
     end
 })
 
-MainLeftBox:AddToggle("InfiniteDiamonds", {
+-- Infinite Diamonds Toggle (under Infinite section)
+InfiniteLeftBox:AddToggle("InfiniteDiamonds", {
     Text = "Infinite Diamonds",
     Default = false,
     Tooltip = "Toggle infinite diamonds.",
@@ -174,8 +207,8 @@ MainLeftBox:AddToggle("InfiniteDiamonds", {
     end
 })
 
--- Auto Deposit Toggle
-MainLeftBox:AddToggle("AutoDeposit", {
+-- Auto Deposit Toggle (under Auto section)
+AutoRightBox:AddToggle("AutoDeposit", {
     Text = "Auto Deposit",
     Default = false,
     Tooltip = "Toggle auto deposit.",
@@ -203,8 +236,8 @@ MainLeftBox:AddToggle("AutoDeposit", {
     end
 })
 
--- Auto Daily Toggle
-MainLeftBox:AddToggle("AutoGifts", {
+-- Auto Daily Toggle (under Auto section)
+AutoRightBox:AddToggle("AutoGifts", {
     Text = "Auto Gifts",
     Default = false,
     Tooltip = "Toggle auto gifts claim (0 to 12).",
@@ -228,6 +261,46 @@ MainLeftBox:AddToggle("AutoGifts", {
             end
 
             print("Auto Gifts Stopped")
+        end
+    end
+})
+
+-- Egg Type Selection Dropdown (under Hatch section)
+HatchRightBox:AddDropdown("EggType", {
+    Text = "Select Egg Type",
+    Values = {"Yeti", "Pumpkin", "Sea", "Nature"},  -- List the available egg types
+    Default = "Yeti",  -- Default to "Yeti"
+    Callback = function(option)
+        selectedEggType = option  -- Set the selected egg type
+        print("Selected Egg Type: " .. selectedEggType)
+    end
+})
+
+-- Auto Egg Purchase Toggle (under Auto section)
+HatchRightBox:AddToggle("AutoEggPurchase", {
+    Text = "Auto Egg Purchase",
+    Default = false,
+    Tooltip = "Automatically purchase selected egg type.",
+    Callback = function(value)
+        isPurchasingEgg = value
+
+        if isPurchasingEgg then
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+            end
+
+            EggPurchaseConnection = RunService.Heartbeat:Connect(function()
+                pcall(purchaseEgg, selectedEggType)  -- Automatically purchase the selected egg type
+            end)
+
+            print("Auto Egg Purchase Enabled")
+        else
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+                EggPurchaseConnection = nil
+            end
+
+            print("Auto Egg Purchase Disabled")
         end
     end
 })
