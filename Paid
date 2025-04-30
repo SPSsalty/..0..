@@ -22,10 +22,10 @@ local AutoDailyConnection = nil
 local function infiniteMoney()
     local args = {
         [1] = {
-            ["Stone"] = 2,
+            ["Stone"] = 1,
             ["Granite"] = 1,
-            ["CoarseDirt"] = 2,
-            ["DiamondOre"] = 1,
+            ["CoarseDirt"] = 1,
+            ["DiamondOre"] = 999,
             ["Ice"] = 1
         }
     }
