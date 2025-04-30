@@ -27,7 +27,7 @@ local EggPurchaseConnection = nil
 local function infiniteMoney()
     local args = {
         [1] = {
-            ["Leaf"] = 999,
+            ["Sandstone"] = 999,
         }
     }
 
