@@ -94,6 +94,17 @@ local function autoGifts()
     end
 end
 
+local function autoRebirth()
+    ReplicatedStorage:WaitForChild("rbxts_include")
+    :WaitForChild("node_modules")
+    :WaitForChild("@rbxts")
+    :WaitForChild("remo")
+    :WaitForChild("src")
+    :WaitForChild("container")
+    :WaitForChild("rebirth")
+    :InvokeServer()
+end
+
 -- Show Discord Invite link as text
 local function showDiscordInvite()
     local discordInviteLink = "https://discord.gg/jcmp39jGDs"
@@ -261,6 +272,34 @@ AutoRightBox:AddToggle("AutoGifts", {
             end
 
             print("Auto Gifts Stopped")
+        end
+    end
+})
+
+AutoRightBox:AddToggle("AutoRebirth", {
+    Text = "Auto Rebirth",
+    Default = false,
+    Tooltip = "Toggle auto rebirth.",
+    Callback = function(value)
+        if value then
+            -- Start the Auto Gifts task
+            if RebirthConnection then
+                RebirthConnection:Disconnect()
+            end
+
+            AutoRebirthConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoRebirth)
+            end)
+
+            print("Auto Rebirth Started")
+        else
+            -- Stop the Auto Gifts task
+            if AutoRebirthConnection then
+                AutoRebirthConnection:Disconnect()
+                AutoRebirthConnection = nil
+            end
+
+            print("Auto Rebirth Stopped")
         end
     end
 })
