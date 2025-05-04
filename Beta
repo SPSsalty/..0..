@@ -1,0 +1,583 @@
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- State variables
+local isInfiniteMoneyActive = false
+local isInfiniteDiamondsActive = false
+local isDepositing = false
+local isPurchasingEgg = false
+local selectedEggType = "Yeti"  -- Default egg type to purchase
+local InfiniteMoneyConnection = nil
+local InfiniteDiamondsConnection = nil
+local AutoDepositConnection = nil
+local AutoGiftsConnection = nil
+local EggPurchaseConnection = nil
+
+local infiniteMoneyDelay = 0.1
+local infiniteDiamondsDelay = 0.1
+local autoDepositDelay = 0.1
+
+local function infiniteMoney()
+    local args = {
+        [1] = {
+            ["CrimtaneOre"] = 999,
+        }
+    }
+
+    while isInfiniteMoneyActive do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("rbxts_include")
+                :WaitForChild("node_modules")
+                :WaitForChild("@rbxts")
+                :WaitForChild("remo")
+                :WaitForChild("src")
+                :WaitForChild("container")
+                :WaitForChild("collect.drops")
+                :FireServer(unpack(args))
+        end)
+
+        wait(infiniteMoneyDelay)  -- Wait for the user-defined delay time
+    end
+end
+
+local function infiniteDiamonds()
+    local args = {
+        [1] = 999
+    }
+
+    while isInfiniteDiamondsActive do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("rbxts_include")
+                :WaitForChild("node_modules")
+                :WaitForChild("@rbxts")
+                :WaitForChild("remo")
+                :WaitForChild("src")
+                :WaitForChild("container")
+                :WaitForChild("collect.diamonds")
+                :FireServer(unpack(args))
+        end)
+
+        wait(infiniteDiamondsDelay)  -- Wait for the user-defined delay time
+    end
+end
+
+local function autoDeposit()
+    local args = { [1] = 0 }
+
+    while isDepositing do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("rbxts_include")
+                :WaitForChild("node_modules")
+                :WaitForChild("@rbxts")
+                :WaitForChild("remo")
+                :WaitForChild("src")
+                :WaitForChild("container")
+                :WaitForChild("processor.process")
+                :InvokeServer(unpack(args))
+        end)
+
+        wait(autoDepositDelay)  -- Wait for the user-defined delay time
+    end
+end
+
+-- Auto Gifts logic (Claims every Gift reward from 0 to 12)
+local function autoGifts()
+    for i = 0, 12 do
+        local args = { [1] = tostring(i) }
+
+        -- Call the server function to claim daily rewards
+        ReplicatedStorage:WaitForChild("rbxts_include")
+            :WaitForChild("node_modules")
+            :WaitForChild("@rbxts")
+            :WaitForChild("remo")
+            :WaitForChild("src")
+            :WaitForChild("container")
+            :WaitForChild("playtime.claim")
+            :InvokeServer(unpack(args))
+
+        print("Claimed Gifts reward: " .. i)
+        wait(1)  -- wait for 1 second before claiming next reward
+    end
+end
+
+local function autoRebirth()
+    ReplicatedStorage:WaitForChild("rbxts_include")
+    :WaitForChild("node_modules")
+    :WaitForChild("@rbxts")
+    :WaitForChild("remo")
+    :WaitForChild("src")
+    :WaitForChild("container")
+    :WaitForChild("rebirth")
+    :InvokeServer()
+end
+
+-- Variable to track if Ctrl + Click TP is enabled or not
+local isCtrlClickTPEnabled = false
+local isCtrlPressed = false  -- Track if Ctrl is pressed
+
+-- Store event connections to disconnect later
+local ctrlPressConnection = nil
+local ctrlReleaseConnection = nil
+local mouseClickConnection = nil
+
+-- Function to handle Ctrl + Click teleportation
+local function handleCtrlClickTP()
+    -- Detect Mouse Click
+    mouseClickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if isCtrlPressed and isCtrlClickTPEnabled then  -- Only teleport if Ctrl is pressed and feature is enabled
+                local mouse = LocalPlayer:GetMouse()
+                local clickPosition = mouse.Hit.p  -- Get the position where the mouse clicked
+
+                -- Teleport the player to the click position
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character:SetPrimaryPartCFrame(CFrame.new(clickPosition))
+                    print("Teleported to: " .. tostring(clickPosition))
+                end
+            end
+        end
+    end)
+
+    -- Listen for the Ctrl key press and release
+    ctrlPressConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+                isCtrlPressed = true  -- Set flag when Ctrl is pressed
+            end
+        end
+    end)
+
+    -- Listen for Ctrl key release
+    ctrlReleaseConnection = game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+                isCtrlPressed = false  -- Reset flag when Ctrl is released
+            end
+        end
+    end)
+end
+
+-- Function to disconnect all connections
+local function disconnectCtrlClickTP()
+    if ctrlPressConnection then
+        ctrlPressConnection:Disconnect()
+        ctrlPressConnection = nil
+    end
+    if ctrlReleaseConnection then
+        ctrlReleaseConnection:Disconnect()
+        ctrlReleaseConnection = nil
+    end
+    if mouseClickConnection then
+        mouseClickConnection:Disconnect()
+        mouseClickConnection = nil
+    end
+end
+
+-- Show Discord Invite link as text
+local function showDiscordInvite()
+    local discordInviteLink = "https://discord.gg/jcmp39jGDs"
+    print("Join our Discord: " .. discordInviteLink)  -- Display the link in the output console
+end
+
+-- Purchase Egg logic
+local function purchaseEgg(eggType)
+    local args = {
+        [1] = eggType,   -- Egg name
+        [2] = 1          -- Always buy 1 egg of the selected type
+    }
+
+    local success, err = pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include")
+            :WaitForChild("node_modules")
+            :WaitForChild("@rbxts")
+            :WaitForChild("remo")
+            :WaitForChild("src")
+            :WaitForChild("container")
+            :WaitForChild("eggs.purchase")
+            :InvokeServer(unpack(args))
+    end)
+
+    if success then
+        print("Successfully purchased 1 " .. eggType .. " egg!")
+    else
+        print("Error purchasing " .. eggType .. " egg: " .. err)
+    end
+end
+
+-- Auto Upgrade Launcher logic
+local function autoUpgradeLauncher()
+    local args = {
+        [1] = 0
+    }
+
+    -- Trigger the upgrade via the server
+    game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include")
+        :WaitForChild("node_modules")
+        :WaitForChild("@rbxts")
+        :WaitForChild("remo")
+        :WaitForChild("src")
+        :WaitForChild("container")
+        :WaitForChild("processor.upgrade")
+        :InvokeServer(unpack(args))
+end
+
+-- UI Window
+local Window = Library:CreateWindow({
+    Title = 'Auralis | Beta Version',
+    Center = true,
+    AutoShow = true,
+})
+
+local Tabs = {
+    Main = Window:AddTab('Main'),
+    Overworld = Window:AddTab('Overworld'),
+    Nether = Window:AddTab('Nether'),
+    Extra = Window:AddTab('Extra')
+}
+
+local MainInfiniteLeftBox = Tabs.Main:AddLeftGroupbox('Infinite')
+local MainAutoRightBox = Tabs.Main:AddRightGroupbox('Auto')
+local OverworldHatchRightBox = Tabs.Overworld:AddRightGroupbox('Hatch')
+local NetherHatchRightBox = Tabs.Nether:AddRightGroupbox('Hatch')
+local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Extra')
+local ExtraRightBox = Tabs.Extra:AddRightGroupbox('Info')
+
+-- Infinite Money Toggle (under Infinite section)
+MainInfiniteLeftBox:AddToggle("InfiniteMoney", {
+    Text = "Infinite Money",
+    Default = false,
+    Tooltip = "Toggle infinite money.",
+    Callback = function(value)
+        isInfiniteMoneyActive = value
+
+        if isInfiniteMoneyActive then
+            if InfiniteMoneyConnection then
+                InfiniteMoneyConnection:Disconnect()
+            end
+
+            InfiniteMoneyConnection = RunService.Heartbeat:Connect(function()
+                pcall(infiniteMoney)
+            end)
+
+            print("Infinite Money Enabled")
+        else
+            if InfiniteMoneyConnection then
+                InfiniteMoneyConnection:Disconnect()
+                InfiniteMoneyConnection = nil
+            end
+
+            print("Infinite Money Disabled")
+        end
+    end
+})
+
+MainInfiniteLeftBox:AddSlider("InfiniteMoneyDelay", {
+    Text = "Infinite Money Delay",  
+    Min = 0.1,  -- Minimum delay (in seconds)
+    Max = 5,    -- Maximum delay (in seconds)
+    Default = 0.1,  -- Default delay value
+    Rounding = 1,    -- Round to 1 decimal place
+    Callback = function(value)
+        infiniteMoneyDelay = value  -- Update the delay for infinite money
+        print("Infinite Money Delay set to: " .. value .. " seconds")
+    end
+})
+
+-- Infinite Diamonds Toggle (under Infinite section)
+MainInfiniteLeftBox:AddToggle("InfiniteDiamonds", {
+    Text = "Infinite Diamonds",
+    Default = false,
+    Tooltip = "Toggle infinite diamonds.",
+    Callback = function(value)
+        isInfiniteDiamondsActive = value
+
+        if isInfiniteDiamondsActive then
+            if InfiniteDiamondsConnection then
+                InfiniteDiamondsConnection:Disconnect()
+            end
+
+            InfiniteDiamondsConnection = RunService.Heartbeat:Connect(function()
+                pcall(infiniteDiamonds)
+            end)
+
+            print("Infinite Diamonds Enabled")
+        else
+            if InfiniteDiamondsConnection then
+                InfiniteDiamondsConnection:Disconnect()
+                InfiniteDiamondsConnection = nil
+            end
+
+            print("Infinite Diamonds Disabled")
+        end
+    end
+})
+
+MainInfiniteLeftBox:AddSlider("InfiniteDiamondsDelay", {
+    Text = "Infinite Diamonds Delay",  
+    Min = 0.1,  
+    Max = 5,    
+    Default = 0.1,  
+    Rounding = 1,    
+    Callback = function(value)
+        infiniteDiamondsDelay = value  -- Update the delay for infinite diamonds
+        print("Infinite Diamonds Delay set to: " .. value .. " seconds")
+    end
+})
+
+-- Auto Deposit Toggle (under Auto section)
+MainAutoRightBox:AddToggle("AutoDeposit", {
+    Text = "Auto Deposit",
+    Default = false,
+    Tooltip = "Toggle auto deposit.",
+    Callback = function(value)
+        isDepositing = value
+
+        if isDepositing then
+            if AutoDepositConnection then
+                AutoDepositConnection:Disconnect()
+            end
+
+            AutoDepositConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoDeposit)
+            end)
+
+            print("Auto Deposit Started")
+        else
+            if AutoDepositConnection then
+                AutoDepositConnection:Disconnect()
+                AutoDepositConnection = nil
+            end
+
+            print("Auto Deposit Stopped")
+        end
+    end
+})
+
+MainAutoRightBox:AddSlider("AutoDepositDelay", {
+    Text = "Auto Deposit Delay",  
+    Min = 0.1,  
+    Max = 5,    
+    Default = 0.1,  
+    Rounding = 1,    
+    Callback = function(value)
+        autoDepositDelay = value  -- Update the delay for auto deposit
+        print("Auto Deposit Delay set to: " .. value .. " seconds")
+    end
+})
+
+MainAutoRightBox:AddToggle("AutoUpgradeLauncher", {
+    Text = "Auto Upgrade Launcher",
+    Default = false,
+    Tooltip = "Toggle auto upgrade launcher.",
+    Callback = function(value)
+        if value then
+            -- Start the Auto Upgrade task
+            if AutoUpgradeConnection then
+                AutoUpgradeConnection:Disconnect()
+            end
+
+            AutoUpgradeConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoUpgradeLauncher)  -- Automatically trigger the upgrade
+            end)
+
+            print("Auto Upgrade Launcher Enabled")
+        else
+            -- Stop the Auto Upgrade task
+            if AutoUpgradeConnection then
+                AutoUpgradeConnection:Disconnect()
+                AutoUpgradeConnection = nil
+            end
+
+            print("Auto Upgrade Launcher Disabled")
+        end
+    end
+})
+
+-- Auto Daily Toggle (under Auto section)
+MainAutoRightBox:AddToggle("AutoGifts", {
+    Text = "Auto Gifts",
+    Default = false,
+    Tooltip = "Toggle auto gifts claim (0 to 12).",
+    Callback = function(value)
+        if value then
+            -- Start the Auto Gifts task
+            if AutoGiftsConnection then
+                AutoGiftsConnection:Disconnect()
+            end
+
+            AutoGiftsConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoGifts)
+            end)
+
+            print("Auto Gifts Started")
+        else
+            -- Stop the Auto Gifts task
+            if AutoGiftsConnection then
+                AutoGiftsConnection:Disconnect()
+                AutoGiftsConnection = nil
+            end
+
+            print("Auto Gifts Stopped")
+        end
+    end
+})
+
+MainAutoRightBox:AddToggle("AutoRebirth", {
+    Text = "Auto Rebirth",
+    Default = false,
+    Tooltip = "Toggle auto rebirth.",
+    Callback = function(value)
+        if value then
+            -- Start the Auto Gifts task
+            if RebirthConnection then
+                RebirthConnection:Disconnect()
+            end
+
+            AutoRebirthConnection = RunService.Heartbeat:Connect(function()
+                pcall(autoRebirth)
+            end)
+
+            print("Auto Rebirth Started")
+        else
+            -- Stop the Auto Gifts task
+            if AutoRebirthConnection then
+                AutoRebirthConnection:Disconnect()
+                AutoRebirthConnection = nil
+            end
+
+            print("Auto Rebirth Stopped")
+        end
+    end
+})
+
+-- Egg Type Selection Dropdown (under Hatch section)
+OverworldHatchRightBox:AddDropdown("EggType", {
+    Text = "Select Egg Type",
+    Values = {"Yeti", "Pumpkin", "Sea", "Nature"},  -- List the available egg types
+    Default = "Yeti",  -- Default to "Yeti"
+    Callback = function(option)
+        selectedEggType = option  -- Set the selected egg type
+        print("Selected Egg Type: " .. selectedEggType)
+    end
+})
+
+-- Auto Egg Purchase Toggle (under Auto section)
+OverworldHatchRightBox:AddToggle("AutoEggPurchase", {
+    Text = "Auto Egg Purchase",
+    Default = false,
+    Tooltip = "Automatically purchase selected egg type.",
+    Callback = function(value)
+        isPurchasingEgg = value
+
+        if isPurchasingEgg then
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+            end
+
+            EggPurchaseConnection = RunService.Heartbeat:Connect(function()
+                pcall(purchaseEgg, selectedEggType)  -- Automatically purchase the selected egg type
+            end)
+
+            print("Auto Egg Purchase Enabled")
+        else
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+                EggPurchaseConnection = nil
+            end
+
+            print("Auto Egg Purchase Disabled")
+        end
+    end
+})
+
+NetherHatchRightBox:AddDropdown("EggType", {
+    Text = "Select Egg Type",
+    Values = {"Golem", "Witch", "Dragon", "Magma"},  -- List the available egg types
+    Default = "Golem",  -- Default to "Yeti"
+    Callback = function(option)
+        selectedEggType = option  -- Set the selected egg type
+        print("Selected Egg Type: " .. selectedEggType)
+    end
+})
+
+NetherHatchRightBox:AddToggle("AutoEggPurchase", {
+    Text = "Auto Egg Purchase",
+    Default = false,
+    Tooltip = "Automatically purchase selected egg type.",
+    Callback = function(value)
+        isPurchasingEgg = value
+
+        if isPurchasingEgg then
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+            end
+
+            EggPurchaseConnection = RunService.Heartbeat:Connect(function()
+                pcall(purchaseEgg, selectedEggType)  -- Automatically purchase the selected egg type
+            end)
+
+            print("Auto Egg Purchase Enabled")
+        else
+            if EggPurchaseConnection then
+                EggPurchaseConnection:Disconnect()
+                EggPurchaseConnection = nil
+            end
+
+            print("Auto Egg Purchase Disabled")
+        end
+    end
+})
+
+ExtraLeftBox:AddSlider("WalkspeedSlider", {
+    Text = "Walkspeed",  -- Label for the slider
+    Min = 16,  -- Minimum walkspeed (default walkspeed in Roblox)
+    Max = 500,  -- Maximum walkspeed value
+    Default = 16,  -- Default value for walkspeed (16 is the default)
+    Rounding = 1,  -- Round to 1 decimal place
+    Callback = function(value)
+        -- Set the LocalPlayer's walkspeed based on the slider value
+        LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = value
+        print("Walkspeed set to: " .. value)
+    end
+})
+
+-- Add a Toggle button for Ctrl + Click TP in the UI
+ExtraLeftBox:AddToggle("CtrlClickTP", {
+    Text = "Ctrl + Click TP",
+    Default = false,
+    Tooltip = "Toggle Ctrl + Click to teleport.",
+    Callback = function(value)
+        isCtrlClickTPEnabled = value  -- Update the state of the toggle
+
+        if value then
+            -- Enable Ctrl + Click Teleport
+            handleCtrlClickTP()
+            print("Ctrl + Click TP Enabled")
+        else
+            -- Disable Ctrl + Click Teleport
+            isCtrlPressed = false
+            disconnectCtrlClickTP()  -- Disconnect event listeners to disable the feature
+            print("Ctrl + Click TP Disabled")
+        end
+    end
+})
+
+ExtraRightBox:AddLabel("RNG Dropper Tycoon V1.0")
+
+-- Add Discord Invite Button
+ExtraRightBox:AddButton("Copy Discord Invite Link", function()
+    showDiscordInvite()  -- Display the Discord invite link in the output console for users to copy
+end)
